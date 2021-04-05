@@ -8,20 +8,26 @@ public class LeafNode extends Node {
     public LeafNode rightSibling;
     public KeyValuePair[] dictionary;
 
-    private int linearNullSearch(KeyValuePair[] dps) {
-        for (int i = 0; i < dps.length; i++) {
-            if (dps[i] == null) {
-                return i;
-            }
-        }
-        return -1;
+    public LeafNode(int m, KeyValuePair dp) {
+
+        this.maxNumPairs = m - 1;
+        this.minNumPairs = (int) (Math.ceil(m / 2.0) - 1);
+        this.dictionary = new KeyValuePair[m];
+        this.numPairs = 0;
+        this.insert(dp);
+    }
+
+
+    public LeafNode(int m, KeyValuePair[] pairs, InternalNode parent) {
+        this.maxNumPairs = m - 1;
+        this.minNumPairs = (int) (Math.ceil(m / 2.0) - 1);
+        this.dictionary = pairs;
+        this.numPairs = Helper.firstIndexOfNull(pairs);
+        this.parent = parent;
     }
 
     public void delete(int index) {
-        // Delete dictionary pair from leaf
         this.dictionary[index] = null;
-
-        // Decrement numPairs
         numPairs--;
     }
 
@@ -71,23 +77,5 @@ public class LeafNode extends Node {
 
     public boolean isMergeable() {
         return numPairs == minNumPairs;
-    }
-
-    public LeafNode(int m, KeyValuePair dp) {
-
-        this.maxNumPairs = m - 1;
-        this.minNumPairs = (int) (Math.ceil(m / 2.0) - 1);
-        this.dictionary = new KeyValuePair[m];
-        this.numPairs = 0;
-        this.insert(dp);
-    }
-
-
-    public LeafNode(int m, KeyValuePair[] dps, InternalNode parent) {
-        this.maxNumPairs = m - 1;
-        this.minNumPairs = (int) (Math.ceil(m / 2.0) - 1);
-        this.dictionary = dps;
-        this.numPairs = linearNullSearch(dps);
-        this.parent = parent;
     }
 }
