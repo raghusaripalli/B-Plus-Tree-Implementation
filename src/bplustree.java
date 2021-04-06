@@ -51,7 +51,6 @@ public class bplustree {
 
         // Display filename argument entered
         String filePath = args[0];
-        System.out.println("Filename provided: " + args[0]);
 
         // try with resources block
         // opened file pointers and scanners will be closed automatically(even when there's an exception)
@@ -62,9 +61,7 @@ public class bplustree {
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
                 String mode = parseMode(line);
-                System.out.println(mode);
                 double[] values = parseNumbers(line);
-                System.out.println(values[0] + ", " + values[1]);
                 switch (mode) {
                     case "Initialize":
                         tree = new Tree((int) values[0]);
@@ -91,7 +88,7 @@ public class bplustree {
                         }
                         break;
                     default:
-                        System.err.println("Wrong B+ tree operation:\n\t" + line);
+                        fw.write("Wrong B+ tree operation:\n\t" + line);
                 }
             }
         } catch (IOException e) {
