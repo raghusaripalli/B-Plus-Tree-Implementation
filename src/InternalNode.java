@@ -3,14 +3,13 @@
  * It mainly contains Keys and pointers to Child Nodes (nodes can be internal nodes or leaf nodes)
  */
 class InternalNode extends Node {
-
-    int maxDegree; // equals to m in the input of Initialize(m)
-    int minDegree; // ceil (m / 2)
+    final int maxDegree; // equals to m in the input of Initialize(m)
+    final int minDegree; // equals ceil (m / 2)
     int degree; // no of child pointers
-    InternalNode leftSibling; // references used while lending or borrowing
-    InternalNode rightSibling;
+    InternalNode leftSibling; // reference to left and right sibling
+    InternalNode rightSibling; // forming an doubly linked list
     Integer[] keys;  // indices determining the where data lies. Need not to be actual values
-    Node[] childPointers; // Points to child internal or leaf nodes in the tree
+    Node[] children; // child Pointers from this node to internal or leaf nodes in the tree
 
     // Constructors
     // Initialize with m and keys
@@ -19,7 +18,7 @@ class InternalNode extends Node {
         this.minDegree = (int) Math.ceil(m / 2.0);
         this.degree = 0;
         this.keys = keys;
-        this.childPointers = new Node[this.maxDegree + 1];
+        this.children = new Node[this.maxDegree + 1];
     }
 
     // Initialize with m, keys and child pointers
@@ -28,30 +27,31 @@ class InternalNode extends Node {
         this.minDegree = (int) Math.ceil(m / 2.0);
         this.degree = Helper.firstIndexOfNull(pointers);
         this.keys = keys;
-        this.childPointers = pointers;
+        this.children = pointers;
     }
+
+    // Helper Methods
 
     // Add given pointer to end of childPointers
     // and Increment the degree by 1
     public void appendChildPointer(Node pointer) {
-        this.childPointers[degree] = pointer;
+        this.children[degree] = pointer;
         this.degree++;
     }
 
     // Right Shift all the childPointers by 1
     // Add given pointer to the first index and increment degree by 1
     public void prependChildPointer(Node pointer) {
-        for (int i = degree - 1; i >= 0; i--) {
-            childPointers[i + 1] = childPointers[i];
-        }
-        this.childPointers[0] = pointer;
+        if (degree - 1 + 1 >= 0) System.arraycopy(children, 0, children, 1, degree - 1 + 1);
+        this.children[0] = pointer;
         this.degree++;
     }
 
-
+    // Find index of the given pointer in children array
+    // Return index if found, else return -1.
     public int findIndexOfChildPointer(Node pointer) {
-        for (int i = 0; i < childPointers.length; i++) {
-            if (childPointers[i] == pointer) {
+        for (int i = 0; i < children.length; i++) {
+            if (children[i] == pointer) {
                 return i;
             }
         }
@@ -62,26 +62,14 @@ class InternalNode extends Node {
     // Insert given pointer at the index provided
     // and Increment the degree by 1
     public void insertChildPointer(Node pointer, int index) {
-        if (degree - index >= 0) System.arraycopy(childPointers, index, childPointers, index + 1, degree - index);
-        this.childPointers[index] = pointer;
+        if (degree - index >= 0) System.arraycopy(children, index, children, index + 1, degree - index);
+        this.children[index] = pointer;
         this.degree++;
     }
 
 
-    public boolean isDeficient() {
-        return this.degree < this.minDegree;
-    }
-
-
-    public boolean canLend() {
-        return this.degree > this.minDegree;
-    }
-
-
-    public boolean isMergeable() {
-        return this.degree == this.minDegree;
-    }
-
+    // Move all keys to right by 1 and
+    // Add the given key to the start of the keys.
     public void prependKey(int key) {
         int i;
         for (i = this.keys.length - 1; i > 0; i--) {
@@ -90,7 +78,8 @@ class InternalNode extends Node {
         this.keys[0] = key;
     }
 
-
+    // Remove key at the given index
+    // shift left all the element to the right of the index by 1
     public void removeKeyAndShiftLeft(int index) {
         int i;
         for (i = index; i < this.keys.length - 1; i++) {
@@ -99,18 +88,22 @@ class InternalNode extends Node {
         this.keys[i] = null;
     }
 
-
+    // Remove child pointer at the given index
+    // decrement degree by 1
     public void removePointer(int index) {
-        this.childPointers[index] = null;
+        this.children[index] = null;
         this.degree--;
     }
 
+    // Remove child pointer at the given index
+    // shift left all the element to the right of the index by 1
+    // decrement degree by 1
     public void removeChildPointerAndShiftLeft(int index) {
         int i;
         for (i = index; i < this.degree - 1; i++) {
-            this.childPointers[i] = this.childPointers[i + 1];
+            this.children[i] = this.children[i + 1];
         }
-        this.childPointers[i] = null;
+        this.children[i] = null;
         this.degree--;
     }
 }
