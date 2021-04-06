@@ -2,6 +2,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 
 public class CommonUtils {
+    static int m;
 
     private final static Comparator<KeyValuePair> search = (o1, o2) -> {
         Integer a = o1.key;
@@ -57,5 +58,9 @@ public class CommonUtils {
 
     public static void orderPairsInAscending(KeyValuePair[] pairs) {
         Arrays.sort(pairs, sort);
+    }
+
+    public static int findMidIndex() {
+        return (int) Math.ceil((m + 1) / 2.0) - 1;
     }
 }

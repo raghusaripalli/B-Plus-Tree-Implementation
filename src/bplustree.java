@@ -8,7 +8,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
@@ -29,14 +28,11 @@ public class bplustree {
     public bplustree(int m) {
         this.m = m;
         InsertUtils.m = m;
+        CommonUtils.m = m;
         root = null;
     }
 
     // HELPER METHODS
-
-    public int getMidpoint() {
-        return (int) Math.ceil((this.m + 1) / 2.0) - 1;
-    }
 
 
     private void handleDeficiency(InternalNode in) {
@@ -149,105 +145,8 @@ public class bplustree {
         }
     }
 
+    // DELETE, INSERT and SEARCH methods
 
-    private Node[] splitChildPointers(InternalNode in, int split) {
-        Node[] pointers = in.children;
-        Node[] halfPointers = new Node[this.m + 1];
-
-        // Copy half of the values into halfPointers while updating original keys
-        for (int i = split + 1; i < pointers.length; i++) {
-            halfPointers[i - split - 1] = pointers[i];
-            in.removePointer(i);
-        }
-
-        return halfPointers;
-    }
-
-
-    private KeyValuePair[] splitDictionary(LeafNode ln, int split) {
-        KeyValuePair[] dictionary = ln.dictionary;
-        KeyValuePair[] halfDict = new KeyValuePair[this.m];
-
-        // Copy half of the values into halfDict
-        for (int i = split; i < dictionary.length; i++) {
-            halfDict[i - split] = dictionary[i];
-            ln.delete(i);
-        }
-
-        return halfDict;
-    }
-
-    private void splitInternalNode(InternalNode in) {
-        // Acquire parent
-        InternalNode parent = in.parent;
-
-        // Split keys and pointers in half
-        int midpoint = getMidpoint();
-        int newParentKey = in.keys[midpoint];
-        Integer[] halfKeys = splitKeys(in.keys, midpoint);
-        Node[] halfPointers = splitChildPointers(in, midpoint);
-
-        // Change degree of original InternalNode in
-        in.degree = CommonUtils.firstIndexOfNull(in.children);
-
-        // Create new sibling internal node and add half of keys and pointers
-        InternalNode sibling = new InternalNode(this.m, halfKeys, halfPointers);
-        for (Node pointer : halfPointers) {
-            if (pointer != null) {
-                pointer.parent = sibling;
-            }
-        }
-
-        // Make internal nodes siblings of one another
-        sibling.rightSibling = in.rightSibling;
-        if (sibling.rightSibling != null) {
-            sibling.rightSibling.leftSibling = sibling;
-        }
-        in.rightSibling = sibling;
-        sibling.leftSibling = in;
-
-        if (parent == null) {
-            // Create new root node and add midpoint key and pointers
-            Integer[] keys = new Integer[this.m];
-            keys[0] = newParentKey;
-            InternalNode newRoot = new InternalNode(this.m, keys);
-            newRoot.appendChildPointer(in);
-            newRoot.appendChildPointer(sibling);
-            root = newRoot;
-
-            // Add pointers from children to parent
-            in.parent = newRoot;
-            sibling.parent = newRoot;
-        } else {
-            // Add key to parent
-            parent.keys[parent.degree - 1] = newParentKey;
-            Arrays.sort(parent.keys, 0, parent.degree);
-
-            // Set up pointer to new sibling
-            int pointerIndex = parent.findIndexOfChildPointer(in) + 1;
-            parent.insertChildPointer(sibling, pointerIndex);
-            sibling.parent = parent;
-        }
-    }
-
-    private Integer[] splitKeys(Integer[] keys, int split) {
-
-        Integer[] halfKeys = new Integer[this.m];
-
-        // Remove split-indexed value from keys
-        keys[split] = null;
-
-        // Copy half of the values into halfKeys while updating original keys
-        for (int i = split + 1; i < keys.length; i++) {
-            halfKeys[i - split - 1] = keys[i];
-            keys[i] = null;
-        }
-        return halfKeys;
-    }
-
-    /*
-     *  DELETE, INSERT and SEARCH methods
-     */
 
     public void delete(int key) {
         // If tree is empty, then print error.
@@ -398,9 +297,9 @@ public class bplustree {
         leafNode.numPairs++;
         CommonUtils.orderPairsInAscending(leafNode.dictionary);
 
-        // Split the sorted pairs into two halves
-        int midpoint = getMidpoint();
-        KeyValuePair[] halfDict = splitDictionary(leafNode, midpoint);
+        // Split the pairs into two halves
+        int midIndex = CommonUtils.findMidIndex();
+        KeyValuePair[] halfDict = InsertUtils.splitDictionary(leafNode, midIndex);
 
         if (leafNode.parent == null) {
             InsertUtils.newParentNode(leafNode, halfDict);
@@ -431,14 +330,13 @@ public class bplustree {
             InternalNode in = leafNode.parent;
             while (in != null) {
                 if (in.degree == in.maxDegree + 1) {
-                    splitInternalNode(in);
+                    InsertUtils.splitInternalNode(in);
                 } else {
                     break;
                 }
                 in = in.parent;
             }
         }
-
     }
 
     public Double search(int key) {
