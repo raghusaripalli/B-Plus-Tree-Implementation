@@ -1,4 +1,10 @@
+/*
+ * Helper Methods to delete the desired key in B+ tree
+ */
 public class DeleteUtils {
+    // Borrow the right most pair from the left leaf node
+    // and prepend it to cur leaf node
+    // Update the parent pointer
     public static void borrowFromLeftLeafNode(LeafNode leafNode, InternalNode parent) {
         LeafNode sibling;
         sibling = leafNode.getLeftSibling();
@@ -15,6 +21,9 @@ public class DeleteUtils {
         }
     }
 
+    // Borrow leftmost pair from the right leaf node
+    // and append to the cur lead node
+    // Update the parent pointer when necessary
     public static void borrowFromRightLeafNode(LeafNode leafNode, InternalNode parent) {
         LeafNode sibling;
         sibling = leafNode.getRightSibling();
@@ -31,6 +40,9 @@ public class DeleteUtils {
         }
     }
 
+    // remove the cur leaf node from the parent
+    // append the left out pairs to the left sibling
+    // handle deficiency in parent
     public static void mergeWithLeftLeafNode(LeafNode leafNode, InternalNode parent) {
         LeafNode sibling;
         sibling = leafNode.getLeftSibling();
@@ -55,6 +67,7 @@ public class DeleteUtils {
             DeleteUtils.handleDeficiency(parent);
     }
 
+    // Handle deficiency in internal nodes of B+ tree
     public static void handleDeficiency(InternalNode in) {
 
         InternalNode parent = in.parent;
@@ -90,12 +103,15 @@ public class DeleteUtils {
             mergeWthRightInternalNode(in, parent);
         }
 
-        // Handle deficiency a level up if it exists
+        // Handle deficiency by leveling it up
         if (parent != null && parent.getDegree() < parent.getMinDegree()) {
             handleDeficiency(parent);
         }
     }
 
+    // prepend parent key, all the cur Node keys and children to right sibling
+    // remove cur node from parent
+    // update sibling pointers
     private static void mergeWthRightInternalNode(InternalNode in, InternalNode parent) {
         InternalNode sibling;
         sibling = in.getRightSibling();
@@ -121,6 +137,9 @@ public class DeleteUtils {
             in.getLeftSibling().setRightSibling(sibling);
     }
 
+    // append parent key, all the cur Node keys and children to left sibling
+    // remove cur node from parent
+    // update sibling pointers
     private static void mergeWithLeftInternalNode(InternalNode in, InternalNode parent) {
         InternalNode sibling;
         sibling = in.getLeftSibling();
@@ -146,6 +165,9 @@ public class DeleteUtils {
             in.getRightSibling().setLeftSibling(sibling);
     }
 
+    // Borrow first key in the right sibling and update it in parent
+    // parent key will be appended to cur Internal node
+    // Append the child pointers of first key to newly appended key in internal node.
     private static void borrowFromRightInternalNode(InternalNode in, InternalNode parent) {
         InternalNode sibling;
         sibling = in.getRightSibling();
@@ -165,6 +187,9 @@ public class DeleteUtils {
         sibling.removeChildPointerAndShiftLeft(0);
     }
 
+    // Borrow the last key from left sibling and update it in the parent
+    // And the key in parent is prepended to keys in cur Internal node
+    // Children pointers of last key in left sibling are prepended to cur Internal node
     private static void borrowFromLeftInternalNode(InternalNode in, InternalNode parent) {
         InternalNode sibling;
         sibling = in.getLeftSibling();

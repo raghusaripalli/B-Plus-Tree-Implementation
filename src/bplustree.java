@@ -11,6 +11,7 @@ import static java.lang.System.exit;
 /**
  * bplustree driver class
  * reads input from the file and executes commands on B+ tree
+ *
  * @author Raghuveer Sharma Saripalli
  */
 
@@ -87,7 +88,7 @@ public class bplustree {
                         }
                         break;
                     default:
-                        System.out.println("Wrong B+ tree operation:\n\t" + line);
+                        System.err.println("Wrong B+ tree operation:\n\t" + line);
                 }
             }
         } catch (IOException e) {
@@ -95,36 +96,5 @@ public class bplustree {
             exit(-1);
         }
         System.out.println("result is written to the file 'output_file.txt'");
-
-        for (int m = 3; m <= 10; m++) {
-            Tree tree = new Tree(m);
-            for (int bound = 1; bound <= 250; bound++) {
-                //System.out.println(m + " " + bound);
-                for (int key = 1; key <= bound; key++) {
-                    tree.insert(key, key);
-                    if (key != tree.search(key)) {
-                        System.err.printf("m: %d, key: %d, bound: %d. Ins, Search failed", m, key, bound);
-                        break;
-                    }
-                }
-                if (bound != tree.searchRange(1, bound).size()) {
-                    System.err.printf("m: %d, bound: %d. ins, Search in range failed", m, bound);
-                    break;
-                }
-
-                for (int key = bound; key >= 1; key--) {
-                    tree.delete(key);
-                    if (null !=
-                            tree.search(key)) {
-                        System.err.printf("m: %d, key: %d, bound: %d. Del, Search failed", m, key, bound);
-                        break;
-                    }
-                }
-                if (0 != tree.searchRange(1, bound).size()) {
-                    System.err.printf("m: %d, bound: %d. del, Search in range failed", m, bound);
-                    break;
-                }
-            }
-        }
     }
 }
