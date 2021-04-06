@@ -28,13 +28,11 @@ public class bplustree {
     // Constructor
     public bplustree(int m) {
         this.m = m;
+        InsertUtils.m = m;
         root = null;
     }
 
-    /*
-        HELPER METHODS
-     */
-
+    // HELPER METHODS
 
     public int getMidpoint() {
         return (int) Math.ceil((this.m + 1) / 2.0) - 1;
@@ -390,72 +388,57 @@ public class bplustree {
         // Find leaf node to insert into
         LeafNode leafNode = (root == null) ? this.firstLeaf : su.searchLeafNode(key);
 
-        // Insert into leaf node fails if node becomes overfull
-        if (!leafNode.insert(new KeyValuePair(key, value))) {
+        // Insert success then return
+        if (leafNode.insert(new KeyValuePair(key, value)))
+            return;
 
-            // Sort all the dictionary pairs with the included pair to be inserted
-            leafNode.dictionary[leafNode.numPairs] = new KeyValuePair(key, value);
-            leafNode.numPairs++;
-            CommonUtils.orderPairsInAscending(leafNode.dictionary);
+        // Insertion fails due to overflow, then
+        // Sort all the dictionary pairs with the included pair to be inserted
+        leafNode.dictionary[leafNode.numPairs] = new KeyValuePair(key, value);
+        leafNode.numPairs++;
+        CommonUtils.orderPairsInAscending(leafNode.dictionary);
 
-            // Split the sorted pairs into two halves
-            int midpoint = getMidpoint();
-            KeyValuePair[] halfDict = splitDictionary(leafNode, midpoint);
+        // Split the sorted pairs into two halves
+        int midpoint = getMidpoint();
+        KeyValuePair[] halfDict = splitDictionary(leafNode, midpoint);
 
-            if (leafNode.parent == null) {
-                newParentNode(leafNode, halfDict);
+        if (leafNode.parent == null) {
+            InsertUtils.newParentNode(leafNode, halfDict);
+        } else {
+            InsertUtils.updateParent(leafNode, halfDict[0]);
+        }
 
-            } else {
-                updateParent(leafNode, halfDict[0]);
-            }
+        // Create new LeafNode that holds the other half
+        LeafNode newLeafNode = new LeafNode(this.m, halfDict, leafNode.parent);
 
-            // Create new LeafNode that holds the other half
-            LeafNode newLeafNode = new LeafNode(this.m, halfDict, leafNode.parent);
+        // Update child pointers of parent node
+        int pointerIndex = leafNode.parent.findIndexOfChildPointer(leafNode) + 1;
+        leafNode.parent.insertChildPointer(newLeafNode, pointerIndex);
 
-            // Update child pointers of parent node
-            int pointerIndex = leafNode.parent.findIndexOfChildPointer(leafNode) + 1;
-            leafNode.parent.insertChildPointer(newLeafNode, pointerIndex);
+        // Make leaf nodes siblings of one another
+        newLeafNode.rightSibling = leafNode.rightSibling;
+        if (newLeafNode.rightSibling != null) {
+            newLeafNode.rightSibling.leftSibling = newLeafNode;
+        }
+        leafNode.rightSibling = newLeafNode;
+        newLeafNode.leftSibling = leafNode;
 
-            // Make leaf nodes siblings of one another
-            newLeafNode.rightSibling = leafNode.rightSibling;
-            if (newLeafNode.rightSibling != null) {
-                newLeafNode.rightSibling.leftSibling = newLeafNode;
-            }
-            leafNode.rightSibling = newLeafNode;
-            newLeafNode.leftSibling = leafNode;
+        if (root == null) {
+            // Set the root of B+ tree to be the parent
+            root = leafNode.parent;
 
-            if (root == null) {
-                // Set the root of B+ tree to be the parent
-                root = leafNode.parent;
-
-            } else {
-                InternalNode in = leafNode.parent;
-                while (in != null) {
-                    if (in.degree == in.maxDegree + 1) {
-                        splitInternalNode(in);
-                    } else {
-                        break;
-                    }
-                    in = in.parent;
+        } else {
+            InternalNode in = leafNode.parent;
+            while (in != null) {
+                if (in.degree == in.maxDegree + 1) {
+                    splitInternalNode(in);
+                } else {
+                    break;
                 }
+                in = in.parent;
             }
         }
-    }
 
-    private void updateParent(LeafNode leafNode, KeyValuePair keyValuePair) {
-        // Add new key to parent for proper indexing
-        int newParentKey = keyValuePair.key;
-        leafNode.parent.keys[leafNode.parent.degree - 1] = newParentKey;
-        Arrays.sort(leafNode.parent.keys, 0, leafNode.parent.degree);
-    }
-
-    private void newParentNode(LeafNode leafNode, KeyValuePair[] halfDict) {
-        // Create internal node to serve as parent, use dictionary midpoint key
-        Integer[] parent_keys = new Integer[this.m];
-        parent_keys[0] = halfDict[0].key;
-        InternalNode parent = new InternalNode(this.m, parent_keys);
-        leafNode.parent = parent;
-        parent.appendChildPointer(leafNode);
     }
 
     public Double search(int key) {
@@ -463,20 +446,19 @@ public class bplustree {
         if (firstLeaf == null)
             return null;
 
-        // Find leaf node in which key might be present
+        // get leaf node in which value may exist
         LeafNode leafNode = (root == null) ? this.firstLeaf : su.searchLeafNode(key);
 
-        // Perform binary search to find index of key within leaf node
-        KeyValuePair[] pair = leafNode.dictionary;
-        int index = CommonUtils.binarySearch(pair, leafNode.numPairs, key);
+        // do binary search to find the value
+        int index = CommonUtils.binarySearch(leafNode.dictionary, leafNode.numPairs, key);
 
-        // Return null if index is negative else value of index
-        return index < 0 ? null : pair[index].value;
+        // Return null if index is negative else value present at the index
+        return index < 0 ? null : leafNode.dictionary[index].value;
     }
 
     public List<Double> search(int lowerBound, int upperBound) {
         List<Double> result = new ArrayList<>();
-        LeafNode currNode = this.firstLeaf;
+        LeafNode currNode = (root == null) ? this.firstLeaf : su.searchLeafNode(lowerBound);
 
         // Iterate from first leaf till last leaf
         while (currNode != null) {
