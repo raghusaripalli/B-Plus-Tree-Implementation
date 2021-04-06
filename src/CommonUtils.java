@@ -68,9 +68,4 @@ public class CommonUtils {
     public static void orderPairsInAscending(KeyValuePair[] pairs) {
         Arrays.sort(pairs, sort);
     }
-
-    // Return the mid index for m value
-    public static int findMidIndex() {
-        return (int) Math.ceil((m + 1) / 2.0) - 1;
-    }
 }

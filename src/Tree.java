@@ -9,6 +9,7 @@ import java.util.List;
 public class Tree {
     // Class Variables
     int m;
+    static int midIndex;
     LeafNode firstLeaf;
     static InternalNode root;
     final SearchUtils su = new SearchUtils();
@@ -16,6 +17,7 @@ public class Tree {
     // Constructor
     public Tree(int m) {
         this.m = m;
+        midIndex = (int) Math.ceil((m + 1) / 2.0) - 1;
         InsertUtils.m = m;
         CommonUtils.m = m;
         root = null;
@@ -50,7 +52,6 @@ public class Tree {
         CommonUtils.orderPairsInAscending(leafNode.getDictionary());
 
         // divide the pairs into two halves
-        int midIndex = CommonUtils.findMidIndex();
         KeyValuePair[] remainingPairs = InsertUtils.bifurcatePairs(leafNode, midIndex);
 
         if (leafNode.parent == null) {
@@ -70,7 +71,7 @@ public class Tree {
         InternalNode in = leafNode.parent;
         while (in != null) {
             if (in.getDegree() == in.getMaxDegree() + 1) {
-                InsertUtils.splitInternalNode(in);
+                InsertUtils.bifurcateInternalNode(in);
             } else {
                 break;
             }
@@ -129,6 +130,7 @@ public class Tree {
 
     /**
      * Delete provided key from B+ tree if key is present
+     *
      * @param key unique integer value
      */
     public void delete(int key) {

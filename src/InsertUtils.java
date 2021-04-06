@@ -53,12 +53,13 @@ public class InsertUtils {
         return remainingPointers;
     }
 
-    static void splitInternalNode(InternalNode in) {
+    // Internal Node is divided and update the parent appropriately
+    static void bifurcateInternalNode(InternalNode in) {
         // Acquire parent
         InternalNode parent = in.parent;
 
         // Split keys and pointers in half
-        int midpoint = CommonUtils.findMidIndex();
+        int midpoint = Tree.midIndex;
         int newParentKey = in.getKeys()[midpoint];
         Integer[] remainingKeys = InsertUtils.bifurcateKeys(in.getKeys(), midpoint);
         Node[] remainingPointers = bifurcateChildPointers(in, midpoint);

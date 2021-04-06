@@ -84,7 +84,10 @@ public class bplustree {
                             List<String> res = answers.stream()
                                     .map(ans -> ans == null ? "Null" : ans.toString())
                                     .collect(Collectors.toList());
-                            fw.write(String.join(COMMA, res) + NEWLINE);
+                            if (res.size()==0)
+                                fw.write("Null");
+                            else
+                                fw.write(String.join(COMMA, res) + NEWLINE);
                         }
                         break;
                     default:
