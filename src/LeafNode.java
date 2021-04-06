@@ -7,12 +7,12 @@ import java.util.Arrays;
  * And the parent for this node will only be an Internal Node
  */
 class LeafNode extends Node {
-    final int maxNumPairs; // equals to m - 1 in the input of Initialize(m)
-    final int minNumPairs; // equals ceil (m / 2)
-    int numPairs; // no of key-value pairs
-    LeafNode leftSibling; // reference to left and right sibling
-    LeafNode rightSibling; // forming an doubly linked list
-    KeyValuePair[] dictionary; // array containing actual key-value pairs
+    private final int maxNumPairs; // equals to m - 1 in the input of Initialize(m)
+    private final int minNumPairs; // equals ceil (m / 2)
+    private int numPairs; // no of key-value pairs
+    private LeafNode leftSibling; // reference to left and right sibling
+    private LeafNode rightSibling; // forming an doubly linked list
+    private final KeyValuePair[] dictionary; // array containing actual key-value pairs
 
     // Constructor
     // Initialize with m and key-value pair
@@ -74,5 +74,39 @@ class LeafNode extends Node {
         }
         this.dictionary[i] = pair;
         numPairs++;
+    }
+
+    // Getters and Setters
+
+    public int getMinNumPairs() {
+        return minNumPairs;
+    }
+
+    public int getNumPairs() {
+        return numPairs;
+    }
+
+    public void setNumPairs(int numPairs) {
+        this.numPairs = numPairs;
+    }
+
+    public LeafNode getLeftSibling() {
+        return leftSibling;
+    }
+
+    public void setLeftSibling(LeafNode leftSibling) {
+        this.leftSibling = leftSibling;
+    }
+
+    public LeafNode getRightSibling() {
+        return rightSibling;
+    }
+
+    public void setRightSibling(LeafNode rightSibling) {
+        this.rightSibling = rightSibling;
+    }
+
+    public KeyValuePair[] getDictionary() {
+        return dictionary;
     }
 }

@@ -6,8 +6,8 @@ public class InsertUtils {
     public static void updateParent(LeafNode leafNode, KeyValuePair keyValuePair) {
         // Add new key to parent for proper indexing
         int newParentKey = keyValuePair.key;
-        leafNode.parent.keys[leafNode.parent.degree - 1] = newParentKey;
-        Arrays.sort(leafNode.parent.keys, 0, leafNode.parent.degree);
+        leafNode.parent.getKeys()[leafNode.parent.getDegree() - 1] = newParentKey;
+        Arrays.sort(leafNode.parent.getKeys(), 0, leafNode.parent.getDegree());
     }
 
     public static void newParentNode(LeafNode leafNode, KeyValuePair[] halfDict) {
@@ -19,45 +19,38 @@ public class InsertUtils {
         parent.appendChildPointer(leafNode);
     }
 
-    static KeyValuePair[] splitDictionary(LeafNode ln, int split) {
-        KeyValuePair[] dictionary = ln.dictionary;
-        KeyValuePair[] halfDict = new KeyValuePair[m];
-
-        // Copy half of the values into halfDict
-        for (int i = split; i < dictionary.length; i++) {
-            halfDict[i - split] = dictionary[i];
-            ln.delete(i);
+    // From given index copy pairs from leaf node to new array
+    // Also delete the copied pairs from the leaf node
+    static KeyValuePair[] bifurcatePairs(LeafNode leafNode, int index) {
+        KeyValuePair[] remainingPairs = new KeyValuePair[m];
+        for (int i = index; i < leafNode.getDictionary().length; i++) {
+            remainingPairs[i - index] = leafNode.getDictionary()[i];
+            leafNode.delete(i);
         }
-
-        return halfDict;
+        return remainingPairs;
     }
 
-    public static Integer[] splitKeys(Integer[] keys, int split) {
-
-        Integer[] halfKeys = new Integer[m];
-
-        // Remove split-indexed value from keys
-        keys[split] = null;
-
-        // Copy half of the values into halfKeys while updating original keys
-        for (int i = split + 1; i < keys.length; i++) {
-            halfKeys[i - split - 1] = keys[i];
+    // From given index copy keys from keys to new array
+    // Also delete the copied keys from the keys array
+    public static Integer[] bifurcateKeys(Integer[] keys, int index) {
+        Integer[] remainingKeys = new Integer[m];
+        keys[index] = null;
+        for (int i = index + 1; i < keys.length; i++) {
+            remainingKeys[i - index - 1] = keys[i];
             keys[i] = null;
         }
-        return halfKeys;
+        return remainingKeys;
     }
 
-    private static Node[] splitChildPointers(InternalNode in, int split) {
-        Node[] pointers = in.children;
-        Node[] halfPointers = new Node[m + 1];
-
-        // Copy half of the values into halfPointers while updating original keys
-        for (int i = split + 1; i < pointers.length; i++) {
-            halfPointers[i - split - 1] = pointers[i];
+    // From given index copy children from in.children to new Node array
+    // Also delete the copied child pointers from the in.children array
+    private static Node[] bifurcateChildPointers(InternalNode in, int index) {
+        Node[] remainingPointers = new Node[m + 1];
+        for (int i = index + 1; i < in.getChildren().length; i++) {
+            remainingPointers[i - index - 1] = in.getChildren()[i];
             in.removePointer(i);
         }
-
-        return halfPointers;
+        return remainingPointers;
     }
 
     static void splitInternalNode(InternalNode in) {
@@ -66,50 +59,75 @@ public class InsertUtils {
 
         // Split keys and pointers in half
         int midpoint = CommonUtils.findMidIndex();
-        int newParentKey = in.keys[midpoint];
-        Integer[] halfKeys = InsertUtils.splitKeys(in.keys, midpoint);
-        Node[] halfPointers = splitChildPointers(in, midpoint);
+        int newParentKey = in.getKeys()[midpoint];
+        Integer[] remainingKeys = InsertUtils.bifurcateKeys(in.getKeys(), midpoint);
+        Node[] remainingPointers = bifurcateChildPointers(in, midpoint);
 
         // Change degree of original InternalNode in
-        in.degree = CommonUtils.firstIndexOfNull(in.children);
+        in.setDegree(CommonUtils.firstIndexOfNull(in.getChildren()));
 
         // Create new sibling internal node and add half of keys and pointers
-        InternalNode sibling = new InternalNode(m, halfKeys, halfPointers);
-        for (Node pointer : halfPointers) {
+        InternalNode sibling = new InternalNode(m, remainingKeys, remainingPointers);
+        for (Node pointer : remainingPointers) {
             if (pointer != null) {
                 pointer.parent = sibling;
             }
         }
 
         // Make internal nodes siblings of one another
-        sibling.rightSibling = in.rightSibling;
-        if (sibling.rightSibling != null) {
-            sibling.rightSibling.leftSibling = sibling;
+        sibling.setRightSibling(in.getRightSibling());
+        if (sibling.getRightSibling() != null) {
+            sibling.getRightSibling().setLeftSibling(sibling);
         }
-        in.rightSibling = sibling;
-        sibling.leftSibling = in;
+        in.setRightSibling(sibling);
+        sibling.setLeftSibling(in);
 
         if (parent == null) {
-            // Create new root node and add midpoint key and pointers
-            Integer[] keys = new Integer[m];
-            keys[0] = newParentKey;
-            InternalNode newRoot = new InternalNode(m, keys);
-            newRoot.appendChildPointer(in);
-            newRoot.appendChildPointer(sibling);
-            bplustree.root = newRoot;
-
-            // Add pointers from children to parent
-            in.parent = newRoot;
-            sibling.parent = newRoot;
-        } else {
-            // Add key to parent
-            parent.keys[parent.degree - 1] = newParentKey;
-            Arrays.sort(parent.keys, 0, parent.degree);
-
-            // Set up pointer to new sibling
-            int pointerIndex = parent.findIndexOfChildPointer(in) + 1;
-            parent.insertChildPointer(sibling, pointerIndex);
-            sibling.parent = parent;
+            newRoot(in, newParentKey, sibling);
+            return;
         }
+        addToExistingParent(in, parent, newParentKey, sibling);
+    }
+
+    // Add key to parent existing
+    // Set up pointer to new sibling
+    private static void addToExistingParent(InternalNode in, InternalNode parent, int newParentKey, InternalNode sibling) {
+        parent.getKeys()[parent.getDegree() - 1] = newParentKey;
+        Arrays.sort(parent.getKeys(), 0, parent.getDegree());
+
+
+        int pointerIndex = parent.findIndexOfChildPointer(in) + 1;
+        parent.insertChildPointer(sibling, pointerIndex);
+        sibling.parent = parent;
+    }
+
+    // Creates new parent
+    // Add pointers from children to parent
+    // Make the parent as root
+    private static void newRoot(InternalNode in, int newParentKey, InternalNode sibling) {
+        Integer[] keys = new Integer[m];
+        keys[0] = newParentKey;
+        InternalNode newRoot = new InternalNode(m, keys);
+        newRoot.appendChildPointer(in);
+        newRoot.appendChildPointer(sibling);
+        Tree.root = newRoot;
+
+        in.parent = newRoot;
+        sibling.parent = newRoot;
+    }
+
+    // Create new LeafNode that holds the other half
+    // Update child pointers of parent node
+    // Make leaf nodes siblings of one another
+    public static void createNewLeafNodeUsingRemainingPairs(LeafNode leafNode, KeyValuePair[] remainingPairs) {
+        LeafNode newLeafNode = new LeafNode(m, remainingPairs, leafNode.parent);
+        int pointerIndex = leafNode.parent.findIndexOfChildPointer(leafNode) + 1;
+        leafNode.parent.insertChildPointer(newLeafNode, pointerIndex);
+        newLeafNode.setRightSibling(leafNode.getRightSibling());
+        if (newLeafNode.getRightSibling() != null) {
+            newLeafNode.getRightSibling().setLeftSibling(newLeafNode);
+        }
+        leafNode.setRightSibling(newLeafNode);
+        newLeafNode.setLeftSibling(leafNode);
     }
 }

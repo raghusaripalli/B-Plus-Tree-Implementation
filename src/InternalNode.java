@@ -3,13 +3,13 @@
  * It mainly contains Keys and pointers to Child Nodes (nodes can be internal nodes or leaf nodes)
  */
 class InternalNode extends Node {
-    final int maxDegree; // equals to m in the input of Initialize(m)
-    final int minDegree; // equals ceil (m / 2)
-    int degree; // no of child pointers
-    InternalNode leftSibling; // reference to left and right sibling
-    InternalNode rightSibling; // forming an doubly linked list
-    Integer[] keys;  // indices determining the where data lies. Need not to be actual values
-    Node[] children; // child Pointers from this node to internal or leaf nodes in the tree
+    private final int maxDegree; // equals to m in the input of Initialize(m)
+    private final int minDegree; // equals ceil (m / 2)
+    private int degree; // no of child pointers
+    private InternalNode leftSibling; // reference to left and right sibling
+    private InternalNode rightSibling; // forming an doubly linked list
+    private final Integer[] keys;  // indices determining the where data lies. Need not to be actual values
+    private final Node[] children; // child Pointers from this node to internal or leaf nodes in the tree
 
     // Constructors
     // Initialize with m and keys
@@ -105,5 +105,47 @@ class InternalNode extends Node {
         }
         this.children[i] = null;
         this.degree--;
+    }
+
+    // Getters and Setters
+
+    public int getMaxDegree() {
+        return maxDegree;
+    }
+
+    public int getMinDegree() {
+        return minDegree;
+    }
+
+    public int getDegree() {
+        return degree;
+    }
+
+    public void setDegree(int degree) {
+        this.degree = degree;
+    }
+
+    public InternalNode getLeftSibling() {
+        return leftSibling;
+    }
+
+    public void setLeftSibling(InternalNode leftSibling) {
+        this.leftSibling = leftSibling;
+    }
+
+    public InternalNode getRightSibling() {
+        return rightSibling;
+    }
+
+    public void setRightSibling(InternalNode rightSibling) {
+        this.rightSibling = rightSibling;
+    }
+
+    public Integer[] getKeys() {
+        return keys;
+    }
+
+    public Node[] getChildren() {
+        return children;
     }
 }
