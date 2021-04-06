@@ -29,7 +29,7 @@ class LeafNode extends Node {
         this.maxNumPairs = m - 1;
         this.minNumPairs = (int) (Math.ceil(m / 2.0) - 1);
         this.dictionary = pairs;
-        this.numPairs = Helper.firstIndexOfNull(pairs);
+        this.numPairs = CommonUtils.firstIndexOfNull(pairs);
         this.parent = parent;
     }
 

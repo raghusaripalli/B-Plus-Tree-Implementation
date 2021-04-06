@@ -25,7 +25,7 @@ class InternalNode extends Node {
     public InternalNode(int m, Integer[] keys, Node[] pointers) {
         this.maxDegree = m;
         this.minDegree = (int) Math.ceil(m / 2.0);
-        this.degree = Helper.firstIndexOfNull(pointers);
+        this.degree = CommonUtils.firstIndexOfNull(pointers);
         this.keys = keys;
         this.children = pointers;
     }
